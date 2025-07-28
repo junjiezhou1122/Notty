@@ -1,6 +1,6 @@
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from "../types/Note";
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://notty-ro4j.onrender.com/api";
 
 // Helper function to handle API responses
 async function handleResponse<T>(response: Response): Promise<T> {
