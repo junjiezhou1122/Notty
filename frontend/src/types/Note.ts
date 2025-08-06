@@ -1,39 +1,37 @@
-interface Note {
-    id: string;
-    title: string;
-    userId: string;
-    createdAt: Date;
-    updatedAt: Date;
-    document: Block[];
+export interface Note {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  document: Block[];
 }
 
-interface Block {
-    id: string;
-    type: string;
-    content: string;
+export interface Block {
+  id: string;
+  type: string;
+  content: string;
 }
 
-interface HeaderBlock extends Block {
-    type: "header";
-    level: 1 | 2 | 3 | 4 | 5 | 6;
+export interface HeaderBlock extends Block {
+  type: "header";
+  level: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
-interface ParagraphBlock extends Block {
-    type: "paragraph";
+export interface ParagraphBlock extends Block {
+  type: "paragraph";
 }
 
-interface ListBlock extends Block {
-    type: "list";
-    items: ListItemBlock[];
+export interface ListBlock extends Block {
+  type: "list";
+  items: ListItemBlock[];
 }
 
-interface TodoBlock extends Block {
-    type: "todo";
-    checked: boolean;
+export interface TodoBlock extends Block {
+  type: "todo";
+  checked: boolean;
 }
 
-interface ListItemBlock extends Block {
-    type: "list-item";
+export interface ListItemBlock extends Block {
+  type: "list-item";
 }
-
-export type { Note, Block, HeaderBlock, ParagraphBlock, ListBlock, TodoBlock, ListItemBlock };

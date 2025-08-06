@@ -1,0 +1,370 @@
+---
+description: develop frontend and backend better
+alwaysApply: false
+---
+# Notty Development Rules - HtDP Principles Applied
+
+## 🎯 Core Philosophy: Data-Driven Design
+
+Always design with data at the center. UI is a pure function of data, backend logic is data transformation.
+
+## 📋 Project Context
+
+- Building a note-taking application called "Notty"
+- Frontend: React 19 + TypeScript + Tailwind CSS + Vite
+- Backend: Go with structured architecture
+- Apply "How to Design Programs" principles systematically
+
+---
+
+## 🔥 CRITICAL RULES - Always Follow
+
+### 1. Data-First Development
+
+- **NEVER** start with UI. Always define TypeScript interfaces/types first
+- **NEVER** use `any`, `object`, or loose types. Every piece of data must have a precise type definition
+- **ALWAYS** model your domain data structures before writing any component or API handler
+- UI components should be pure functions: `Component(props, state) -> JSX`
+
+### 2. Type-Driven Development
+
+```typescript
+// ✅ ALWAYS: Define precise data structures
+interface Block {
+  id: string;
+  type: "paragraph" | "todo" | "heading" | "list";
+  content: string;
+  checked?: boolean; // only for todos
+  level?: number; // only for headings
+  children?: Block[]; // for nested structures
+}
+
+type NoteDocument = Block[];
+
+// ❌ NEVER: Loose typing
+const [note, setNote] = useState({});
+```
+
+### 3. Component Architecture = Data Structure
+
+- For every meaningful data type, create a corresponding React component
+- `NoteDocument` -> `<NoteEditor />`
+- `Block` -> `<BlockRenderer />`
+- `Block.type === 'paragraph'` -> `<ParagraphBlock />`
+- `Block.type === 'todo'` -> `<TodoBlock />`
+
+---
+
+## ⚛️ React Frontend Rules
+
+### State Management
+
+- **IMMUTABILITY**: Never mutate state directly. Always return new objects
+- Use `useState` for local component state, custom hooks for reusable state logic
+- State updates should be pure transformations
+
+```typescript
+// ✅ CORRECT: Immutable update
+setNote((currentNote) =>
+  currentNote.map((block) =>
+    block.id === targetId ? { ...block, checked: !block.checked } : block
+  )
+);
+
+// ❌ WRONG: Direct mutation
+note.find((b) => b.id === targetId).checked = true;
+```
+
+### Component Design
+
+- **PURE COMPONENTS**: Given same props/state, always render same output
+- **NO SIDE EFFECTS** in render functions
+- Use `useEffect` for side effects, `useCallback` for event handlers
+- Components should be small, focused, and composable
+
+### Custom Hooks for Abstraction
+
+```typescript
+// Encapsulate complex logic in custom hooks
+const useNotes = () => {
+  // Logic for CRUD operations, state management
+  return { notes, createNote, updateNote, deleteNote, loading, error };
+};
+
+const useAutoSave = (data, saveFunction) => {
+  // Auto-save logic with debouncing
+};
+```
+
+### File Organization
+
+```
+src/
+├── types/           # All TypeScript interfaces/types
+├── hooks/           # Custom hooks (business logic)
+├── components/
+│   ├── ui/          # Reusable UI components (Button, Input)
+│   ├── features/    # Feature-specific components (NoteEditor)
+│   └── layout/      # Layout components (Sidebar, Header)
+├── services/        # API calls and external services
+└── utils/           # Pure utility functions
+```
+
+---
+
+## 🏗️ Go Backend Rules
+
+### Architecture Layers
+
+```go
+// Handler Layer: HTTP concerns only
+func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
+    // Parse request, call service, return response
+}
+
+// Service Layer: Business logic
+func (s *NoteService) CreateNote(userID uuid.UUID, content string) (*Note, error) {
+    // Validation, business rules, orchestration
+}
+
+// Repository Layer: Data access only
+func (r *NoteRepository) Save(note *Note) error {
+    // Database operations only
+}
+```
+
+### Interface-Driven Design
+
+```go
+// Define interfaces, not concrete implementations
+type NoteRepository interface {
+    FindByID(id uuid.UUID) (*Note, error)
+    Save(note *Note) error
+    FindByUserID(userID uuid.UUID) ([]*Note, error)
+}
+
+type NoteService struct {
+    repo NoteRepository  // Depend on interface
+}
+```
+
+### Data Modeling
+
+- Use structs to precisely model domain entities
+- Include JSON tags for API serialization
+- Use GORM tags for database mapping
+- Validate input data at service layer
+
+---
+
+## 🧪 Testing Rules
+
+### React Testing
+
+- Test components through user interactions, not implementation details
+- Use React Testing Library: `screen.getByRole('button')`, `user.click()`
+- Test custom hooks with `@testing-library/react-hooks`
+- Mock external dependencies (API calls, third-party libraries)
+
+### Go Testing
+
+- Write unit tests for all public functions/methods
+- Use table-driven tests for multiple test cases
+- Mock dependencies using interfaces
+- Test error conditions and edge cases
+
+```go
+func TestNoteService_CreateNote(t *testing.T) {
+    tests := []struct {
+        name    string
+        userID  uuid.UUID
+        content string
+        want    *Note
+        wantErr bool
+    }{
+        // Test cases...
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // Test implementation
+        })
+    }
+}
+```
+
+---
+
+## 🔄 Iterative Development Rules
+
+### Version Progression
+
+1. **v1**: Basic text notes only (simple paragraphs)
+2. **v2**: Add todo functionality
+3. **v3**: Add nested lists and structure
+4. **v4**: Add collaborative editing
+
+### Each Iteration Must Be:
+
+- **Complete**: Fully functional for its scope
+- **Tested**: All features have tests
+- **Documented**: Clear API documentation
+- **Deployable**: Can be shipped to users
+
+### Refactoring Signals
+
+- **Duplication**: Same logic in multiple places → Extract to function/hook
+- **Large Components**: >100 lines → Split into smaller components
+- **Complex State**: Multiple useState → Consider useReducer or custom hook
+- **Unclear Naming**: Can't explain what function does in one sentence → Refactor
+
+---
+
+## 🚨 Code Quality Standards
+
+### TypeScript
+
+- Enable strict mode: `"strict": true`
+- No unused variables or imports
+- Prefer `const` over `let`, never use `var`
+- Use meaningful names: `handleCreateNote`, not `handler1`
+
+### React
+
+- Always provide `key` prop for lists
+- Use React DevTools to verify component structure
+- Optimize re-renders with `useMemo` and `useCallback` when needed
+- Handle loading and error states explicitly
+
+### Go
+
+- Follow Go naming conventions: `CreateNote`, not `createNote`
+- Handle all errors explicitly, never ignore them
+- Use `context.Context` for cancellation and timeouts
+- Run `go fmt`, `go vet`, and `golangci-lint`
+
+---
+
+## 🎨 UI/UX Principles
+
+### Design System
+
+- Use consistent spacing: `space-4`, `space-8`, `space-16`
+- Limit color palette: primary, secondary, gray scale, success, error
+- Typography scale: `text-sm`, `text-base`, `text-lg`, `text-xl`
+- Component states: default, hover, focus, disabled, loading
+
+### Accessibility
+
+- Semantic HTML: use `<button>`, `<input>`, `<nav>` appropriately
+- ARIA labels for screen readers
+- Keyboard navigation support
+- Sufficient color contrast
+
+---
+
+## 🚀 Development Workflow
+
+### Before Writing Code
+
+1. Define data structures (TypeScript interfaces)
+2. Write function signatures (what inputs, what outputs)
+3. Create simple test cases
+4. Implement the minimal working version
+
+### Code Review Checklist
+
+- [ ] Data types clearly defined?
+- [ ] Components are pure functions?
+- [ ] No direct state mutations?
+- [ ] Error handling implemented?
+- [ ] Tests written and passing?
+- [ ] Code follows naming conventions?
+
+### Git Commit Pattern
+
+- `feat: add todo block support`
+- `fix: resolve note saving bug`
+- `refactor: extract useNotes hook`
+- `test: add NoteEditor component tests`
+
+---
+
+## 🎯 Specific to Notty Application
+
+### Core Data Models
+
+```typescript
+// Frontend Types
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  document: Block[];
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+}
+
+interface Block {
+  id: string;
+  type: "paragraph" | "heading" | "todo" | "list";
+  content: string;
+  metadata?: Record<string, any>;
+  children?: Block[];
+}
+```
+
+### API Design
+
+- RESTful endpoints: `GET /api/notes`, `POST /api/notes`, `PUT /api/notes/:id`
+- Consistent response format: `{ data: T, error?: string }`
+- Use HTTP status codes correctly: 200, 201, 400, 401, 404, 500
+
+### Performance Considerations
+
+- Lazy load note content when opening large documents
+- Debounce auto-save functionality (500ms delay)
+- Virtual scrolling for large note lists
+- Optimize bundle size with code splitting
+
+---
+
+## 💡 Remember the HtDP Wisdom
+
+> "Programs are meant to be read by humans and only incidentally for computers to execute."
+
+- **Write for humans first**: Clear naming, good structure, helpful comments
+- **Design recipe**: Data definition → Function signature → Examples → Implementation → Testing
+- **Start simple, iterate**: Working v1 beats perfect v0
+- **Compose, don't complicate**: Small, focused functions that work together
+
+---
+
+## 🔧 Tools and Commands
+
+### Frontend Development
+
+```bash
+cd frontend
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run test         # Run tests
+npm run lint         # Check code quality
+```
+
+### Backend Development
+
+```bash
+go run main.go       # Start server
+go test ./...        # Run all tests
+go mod tidy          # Clean dependencies
+golangci-lint run    # Advanced linting
+```
+
+This ruleset ensures we build Notty following proven software design principles while maintaining high code quality and user experience.
